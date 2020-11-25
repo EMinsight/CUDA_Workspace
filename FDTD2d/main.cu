@@ -51,8 +51,8 @@ int main( void )
     for( int n = 0; n < NT; n++ ){
         
         float t { float(((float)n-0.5)*Dt) };
-        
-        add_Jz <<<Dg, Db>>> ( i_s, j_s, Ez_d, t ,Dt, t0, sig  );
+
+        add_Jz <<<Dg, Db>>> ( i_s, j_s, Ez_d, t ,Dt, t0, sig );
         update_Ez <<<Dg, Db>>> ( Nx, Ny, Ez_d, Hx_d, Hy_d, CEz1, CEz2 );
 
         /* Cuda 同期 */

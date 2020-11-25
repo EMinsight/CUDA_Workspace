@@ -1,0 +1,2 @@
+nvcc -c add_Jz.cu main.cu update_Ez.cu update_Hx.cu update_Hy.cu
+nvcc -o main add_Jz.o main.o update_Ez.o update_Hx.o update_Hy.o

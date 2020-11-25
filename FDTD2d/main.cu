@@ -6,7 +6,7 @@
 #include <string>
 #include <stdio.h>
 
-
+#include "main.h"
 
 int main( void )
 {
@@ -29,46 +29,55 @@ int main( void )
     }
 
     /* Memory allocate (device) */
-    /*float *Ez_d, *Hx_d, *Hy_d;
+    float *Ez_d, *Hx_d, *Hy_d;
     cudaMalloc( (void**)&Ez_d, sizeof(float)*(Nx+1)*(Ny+1) );
     cudaMalloc( (void**)&Hx_d, sizeof(float)*(Nx+1)*Ny );
-    cudaMalloc( (void**)&Hy_d, sizeof(float)*Nx*(Ny+1) );*/
+    cudaMalloc( (void**)&Hy_d, sizeof(float)*Nx*(Ny+1) );
 
     /* Copy to Device */
-    /*cudaMemcpy( Ez_d, Ez, sizeof(float)*(Nx+1)*(Ny+1),  cudaMemcpyToDevice );
-    cudaMemcpy( Hx_d, Hx, sizeof(float)*(Nx+1)*Ny,  cudaMemcpyToDevice );
-    cudaMemcpy( Hy_d, Hy, sizeof(float)*Nx*(Ny+1),  cudaMemcpyToDevice );*/
-
-    /* a + b = c */
-    float *a = new float[ Nx ];
-    float *b = new float[ Nx ];
-    float *c = new float[ Nx ];
-
-    for( int i = 0; i < Nx; i++ ){
-        a[i] = (float)i;
-        b[i] = 2.5*(float)i;
-        c[i] = 0.0;
-    }
-
-    // memory allocate (device) //
-    float *a_d, *b_d, *c_d;
-    cudaMalloc( (void**)&a_d, sizeof(float)*Nx );
-    cudaMalloc( (void**)&b_d, sizeof(float)*Nx );
-    cudaMalloc( (void**)&c_d, sizeof(float)*Nx );
-
-    // Copy to Device //
-    cudaMemcpy( a_d, a, sizeof(float)*Nx,   cudaMemcpyToDevice );
-    cudaMemcpy( b_d, b, sizeof(float)*Nx,   cudaMemcpyToDevice );
-    cudaMemcpy( c_d, c, sizeof(float)*Nx,   cudaMemcpyToDevice );
+    cudaMemcpy( Ez_d, Ez, sizeof(float)*(Nx+1)*(Ny+1),  cudaMemcpyHostToDevice );
+    cudaMemcpy( Hx_d, Hx, sizeof(float)*(Nx+1)*Ny,  cudaMemcpyHostToDevice );
+    cudaMemcpy( Hy_d, Hy, sizeof(float)*Nx*(Ny+1),  cudaMemcpyHostToDevice );
 
     dim3 Dg(10,10,1), Db(10,10,1);
 
-    add <<<Dg, Db>>> ( a, b, c );
+    int NT{ int(Tmax/Dt) };
 
-    //int NT{ Tmax/Dt };
+    const float CEz1 { Dt/EPS0/Dx };
+    const float CEz2 { Dt/EPS0/Dy };
+    const float CHx { Dt/MU0/Dy };
+    const float CHy { Dt/MU0/Dx };
 
-    /*for( int n = 0; n < NT; n++ ){
+    for( int n = 0; n < NT; n++ ){
+        
+        float t { float(((float)n-0.5)*Dt) };
+        
+        add_Jz <<<Dg, Db>>> ( i_s, j_s, Ez_d, t ,Dt, t0, sig  );
+        update_Ez <<<Dg, Db>>> ( Nx, Ny, Ez_d, Hx_d, Hy_d, CEz1, CEz2 );
 
-    }*/
+        /* Cuda 同期 */
+        cudaDeviceSynchronize();
+
+        update_Hx <<<Dg, Db>>> ( Nx, Ny, Hx_d, Ez_d, CHx );
+        update_Hy <<<Dg, Db>>> ( Nx, Ny, Hy_d, Ez_d, CHy );
+
+        cudaMemcpy( Ez, Ez_d, sizeof(float)*(Nx+1)*(Ny+1), cudaMemcpyDeviceToHost );
+        std::string filename = "./result/ez_" + std::to_string(n) + ".dat";
+        std::ofstream ofs(filename.c_str());
+        for( int i = 0; i <= Nx; i++ ){
+            for( int j = 0; j <= Ny; j++ ){
+                ofs << i << " " << j << " " << Ez[idx_Ez(i, j)] << "\n";
+            }
+            ofs << "\n";
+        }
+        ofs.close();
+
+        cudaDeviceSynchronize();
+
+    }
+
+    cudaFree( Ez_d );
+    cudaFree( Hx_d );
+    cudaFree( Hy_d );
 
 }

@@ -79,11 +79,12 @@ int main( void )
         }
 
         ofs.close();
-
-        std::cout << n << " " << Ez[idx_Ez(25, 25)] << "\n";
+        
         cudaDeviceSynchronize();
 
     }
+
+    std::cout << Ez[idx_Ez(i_s,  j_s)] << std::endl;
 
     cudaFree( Ez_d );
     cudaFree( Hx_d );

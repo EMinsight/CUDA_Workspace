@@ -54,6 +54,16 @@ void fdtd_calc( )
     Htheta = new float [ Nr*(Ntheta+1)*Nphi ];
     Hphi = new float [Nr*Ntheta*(Nphi+1) ];
 
+    float* newEr, *newEth, *newEphi;
+    newEr = new float [ Nr*(Ntheta + 1)*(Nphi + 1) ];
+    newEth = new float [ (Nr + 1)*Ntheta*(Nphi + 1) ];
+    newEphi = new float [ (Nr + 1)*(Ntheta + 1)*Nphi ];
 
+    float* oldEr, *oldEth, *oldEphi;
+    oldEr = new float [ Nr*(Ntheta + 1)*(Nphi + 1) ];
+    oldEth = new float [ (Nr + 1)*Ntheta*(Nphi + 1) ];
+    oldEphi = new float [ (Nr + 1)*(Ntheta + 1)*Nphi ];
+
+        
 
 }

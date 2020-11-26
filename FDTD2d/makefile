@@ -6,4 +6,4 @@ main:	$(OBJS)
 	nvcc -o $@ $(OBJS)
 
 %.o:	%.cu $(HEADERS) $(OPTS)
-	nvcc -c $> $(OPTS)
+	nvcc -c $< $(OPTS)

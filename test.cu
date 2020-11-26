@@ -18,14 +18,17 @@ constexpr float Tmax { .5e-3 };
 
 int idx_ez(int i, int j){
   return i*(Ny+1) + j;
+  //return i + j*(Nx+1);
 }
 
 int idx_hx(int i, int j){
   return i*Ny + j;
+  //return i + j*(Nx + 1);
 }
 
 int idx_hy(int i, int j){
   return i*(Ny+1) + j;
+  //return i + j*Nx;
 }
 
 __global__ void update_Ez(float *Ez_d, float *Hx_d, float *Hy_d,
@@ -39,6 +42,11 @@ int Nx, int Ny, float CEz1, float CEz2){
     + CEz1 * (Hy_d[i*(Ny+1) + j] - Hy_d[(i-1)*(Ny+1) + j])
     - CEz2 * (Hx_d[i*Ny + j]     - Hx_d[i*Ny + j-1]);
   }
+  /*if( (i > 0) && (i < Nx) && (j > 0) && (j < Ny)){
+        Ez_d[i + j*(Nx + 1)] = Ez_d[i + j*(Nx + 1)]
+                            + CEz1 * (Hy_d[i + j*Nx] - Hy_d[(i-1) + j*Nx])
+                            - CEz2 * (Hx_d[i + j*(Nx + 1)] - Hx_d[i + (j-1)*(Nx + 1)]);
+  }*/
 }
 
 __global__ void update_Hx(float *Hx_d, float *Ez_d,
@@ -50,6 +58,10 @@ int Nx, int Ny, float CHx){
     Hx_d[i*Ny + j] = Hx_d[i*Ny + j]
     - CHx * (Ez_d[i*(Ny+1) + j+1] - Ez_d[i*(Ny+1) + j]);
   }
+  /*if( (i > 0) && ( i < Nx) && ( j >= 0) && ( j < Ny) ){
+        Hx_d[i + j*(Nx+1)] = Hx_d[i + j*(Nx+1)]
+         - CHx * ( Ez_d[i + (j+1)*(Nx+1)] - Ez_d[i + j*(Nx+1)] );
+  }*/
 }
 
 __global__ void update_Hy(float *Hy_d, float *Ez_d,
@@ -61,6 +73,10 @@ int Nx, int Ny, float CHy){
     Hy_d[i*(Ny+1) + j] = Hy_d[i*(Ny+1) + j]
     + CHy * (Ez_d[(i+1)*(Ny+1) + j] - Ez_d[i*(Ny+1) + j]);
   }
+  /*if( (i >= 0) && (i < Nx) && (j > 0) && (j < Ny) ){
+        Hy_d[i + j*Nx] = Hy_d[i + j*Nx]
+                + CHy*( Ez_d[(i + 1) + j*(Nx+1)] - Ez_d[i + j*(Nx+1)] );
+  }*/
 }
 
 __global__ void add_Jz(float *Ez_d, int i_s, int j_s,
@@ -73,6 +89,10 @@ float t, float Dt, float EPS0, float sig, float t0){
     - Dt/EPS0 * exp( - (t - t0)*(t - t0) / 2.0 / sig/sig );
 
   }
+  /*if( (i == i_s) && (j == j_s) ){
+        Ez_d[i + j*(Nx + 1)] = Ez_d[i + j*(Nx + 1)]
+         - Dt/EPS0 * std::exp( -(t - t0)*(t - t0) / 2.0 / sig / sig );
+  }*/
 }
 
 int main(void){
@@ -141,6 +161,8 @@ int main(void){
 
     cudaDeviceSynchronize();
   }
+
+  std::cout << Ez[idx_ez(25, 25)] << std::endl;
 
   cudaFree(Ez_d);
   cudaFree(Hx_d);

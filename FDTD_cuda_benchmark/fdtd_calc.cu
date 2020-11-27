@@ -40,7 +40,7 @@ const float Dec = float( -7.0*M_PI/180.0 );
 const float Inc = float( 49.0*M_PI/180.0 );
 const float Azim = float( 61.0*M_PI/180.0 );
 
-void fdtd_calc( )
+void fdtd_calc(  )
 {
     int t_step = 1800;
     float t;
@@ -51,19 +51,73 @@ void fdtd_calc( )
 
     float* Hr, *Htheta, *Hphi;
     Hr = new float [ (Nr + 1)*Ntheta*(Nphi) ];
-    Htheta = new float [ Nr*(Ntheta+1)*Nphi ];
-    Hphi = new float [Nr*Ntheta*(Nphi+1) ];
+    Htheta = new float [ Nr*(Ntheta + 1)*Nphi ];
+    Hphi = new float [ Nr*Ntheta*(Nphi + 1) ];
+    array_initialize( Hr, (Nr + 1)*Ntheta*(Nphi) );
+    array_initialize( Htheta, Nr*(Ntheta + 1)*Nphi );
+    array_initialize( Hphi, Nr*Ntheta*(Nphi + 1) )
 
-    float* newEr, *newEth, *newEphi;
-    newEr = new float [ Nr*(Ntheta + 1)*(Nphi + 1) ];
-    newEth = new float [ (Nr + 1)*Ntheta*(Nphi + 1) ];
-    newEphi = new float [ (Nr + 1)*(Ntheta + 1)*Nphi ];
+    float* Er, *Etheta, *Ephi;
+    Er = new float[ 2*Nr*(Ntheta + 1)*(Nphi + 1)　];
+    Etheta = new float[ 2*(Nr + 1)*Ntheta*(Nphi + 1) ];
+    Ephi = new float[ 2*(Nr + 1)*(Ntheta + 1)*Nphi ];
+    array_initialize( Er, 2*Nr*(Ntheta + 1)*(Nphi + 1) );
+    array_initialize( Etheta, 2*(Nr + 1)*Ntheta*(Nphi + 1) );
+    array_initialize( Ephi, 2*(Nr + 1)*(Ntheta + 1)*Nphi );
 
-    float* oldEr, *oldEth, *oldEphi;
-    oldEr = new float [ Nr*(Ntheta + 1)*(Nphi + 1) ];
-    oldEth = new float [ (Nr + 1)*Ntheta*(Nphi + 1) ];
-    oldEphi = new float [ (Nr + 1)*(Ntheta + 1)*Nphi ];
+    float* Dr, *Dtheta, *Dphi;
+    Dr = new float[ 2*Nr*(Ntheta + 1)*(Nphi + 1)　];
+    Dtheta = new float[ 2*(Nr + 1)*Ntheta*(Nphi + 1) ];
+    Dphi = new float[ 2*(Nr + 1)*(Ntheta + 1)*Nphi ];
+    array_initialize( Dr, 2*Nr*(Ntheta + 1)*(Nphi + 1) );
+    array_initialize( Dtheta, 2*(Nr + 1)*Ntheta*(Nphi + 1) );
+    array_initialize( Dphi, 2*(Nr + 1)*(Ntheta + 1)*Nphi );
 
-        
+    float *Dr_theta1, *Dr_theta2, *Dr_phi;
+    float *Dtheta_phi, *Dtheta_r;
+    float *Dphi_r, *Dphi_theta;
+
+    float *Hr_theta1, *Hr_theta2, *Hr_phi;
+    float *Htheta_phi, *Htheta_r;
+    float *Hphi_r, *Hphi_theta;
+
+    /////////////////////////////////////////////////
+    ////////////////ここをどうするか/////////////////
+    /////////////////////////////////////////////////
+
+    pml* idx_Dr = new pml[4];
+    pml* idx_Dth = new pml[4];
+    pml* idx_Dphi = new pml[4];
+    pml* idx_Hr = new pml[4];
+    pml* idx_Hth = new pml[4];
+    pml* idx_Hphi = new pml[4];
+
+    pml_idx_initialize(
+        idx_Dr, idx_Dth, idx_Dphi,
+        idx_Hr, idx_Hth, idx_Hphi
+    );
+
+    float *sigma_theta, *sigma_phi, *sigma_thetea_h, *sigma_phi_h;
+    sigma_theta = new float[ Ntheta + 1 ];
+    sigma_phi = new float[ Nphi + 1 ];
+    sigma_theta_h = new float[ Ntheta + 1 ];
+    sigma_phi_h = new float[ Nphi + 1 ];
+
+    float *geo_B = new float[3];
+    float *sph_B = new float[3];
+
+    geo_mag( geo_B, sph_B );
+
+    // Ne, nyu //
+    float *Nh = new float[ion_L];
+    float *noise_Nh = new float[(ion_L + 1)*(Ntheta + 1)*(Nphi + 1)];
+    float *ny = new float[ion_L + 1];
+    float *Re = new float[ion_L + 1]; 
+
+    Ne_allocate(Nh, Re);
+    ny_allocate(ymd, lla_info, ny, Re);
+
+    float *Cmat = new float[(ion_L + 1)*(Ntheta + 1)*(Nphi + 1)*3*3];
+    float *Fmat = new float[(ion_L + 1)*(Ntheta + 1)*(Nphi + 1)*3*3];
 
 }

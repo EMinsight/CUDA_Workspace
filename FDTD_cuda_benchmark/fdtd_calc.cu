@@ -40,7 +40,8 @@ const float Dec = float( -7.0*M_PI/180.0 );
 const float Inc = float( 49.0*M_PI/180.0 );
 const float Azim = float( 61.0*M_PI/180.0 );
 
-void fdtd_calc(  )
+void fdtd_calc(perturbation P_info, date ymd, geocoordinate lla_info, 
+                            int Num_obs, geocoordinate* obs_p, float* Magnitude )
 {
     int t_step = 1800;
     float t;
@@ -50,7 +51,7 @@ void fdtd_calc(  )
     std::complex <float> zj(0.0, 1.0);
 
     float* Hr, *Htheta, *Hphi;
-    Hr = new float [ (Nr + 1)*Ntheta*(Nphi) ];
+    Hr = new float [ (Nr + 1)*Ntheta*Nphi ];
     Htheta = new float [ Nr*(Ntheta + 1)*Nphi ];
     Hphi = new float [ Nr*Ntheta*(Nphi + 1) ];
     array_initialize( Hr, (Nr + 1)*Ntheta*(Nphi) );
@@ -110,14 +111,32 @@ void fdtd_calc(  )
 
     // Ne, nyu //
     float *Nh = new float[ion_L];
-    float *noise_Nh = new float[(ion_L + 1)*(Ntheta + 1)*(Nphi + 1)];
+    //float *noise_Nh = new float[(ion_L + 1)*(Ntheta + 1)*(Nphi + 1)];
+    float *noise_Nh = new float[ion_L*Ntheta*Nphi];
     float *ny = new float[ion_L + 1];
     float *Re = new float[ion_L + 1]; 
 
     Ne_allocate(Nh, Re);
     ny_allocate(ymd, lla_info, ny, Re);
 
-    float *Cmat = new float[(ion_L + 1)*(Ntheta + 1)*(Nphi + 1)*3*3];
-    float *Fmat = new float[(ion_L + 1)*(Ntheta + 1)*(Nphi + 1)*3*3];
+    float *Cmat = new float[ion_L*Ntheta*Nphi*3*3];
+    float *Fmat = new float[ion_L*Ntheta*Nphi*3*3];
+
+    set_perturbation( P_info, noise_Nh, Nh );
+    set_matrix( zj, Cmat, Fmat, noise_Nh, ny );
+
+    // calculate surface impedance //
+    std::complex <float> Z(0.0, 0.0);
+    float Z_real, Z_imag;
+
+    Z = surface_impe(zj);
+
+    Z_real = Z.real();
+    Z_imag = Z.imag()/omega;
+
+    t = Dt*0.0;
+
+    // fourie //
+    std::complex <float>* E_famp = new std::complex <float> [Num_obs];
 
 }

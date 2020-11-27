@@ -3,6 +3,7 @@
 
 #define _USE_MATH_DEFINES
 #include <cmath>
+#include <complex>
 #include "pml.h"
 #include "geocoordinate.h"
 #include "perturbation.h"
@@ -91,6 +92,11 @@ void geo_mag( float* geo_B, float *sph_B );
 void Ne_allocate( float* Electron_Density, float* Electron_in_spherical );
 void ny_allocate( date, geocoordinate, float* Geomagnetic_in_spherical );
 
+void set_perturbation( perturbation P_infomation, float* Perturbed_Nh, float* ambient_Nh );
+void set_matrix( std::complex <float> zj, float *Cmat, float *Fmat, float *Nh, float *ny );
+
+std::complex <float> surface_impe( std::complex <float> zj );
+
 inline double dist(double i){return R0 + i*delta_r;};
 inline double th(double j){return THETA0 + j*delta_theta;};
 inline double ph(double k){return k*delta_phi;};
@@ -102,5 +108,12 @@ inline double C_4(double r, double theta, double sig){return 1.0/r/std::sin(thet
 inline double C_5(double r){return Dt/r/delta_r;};
 inline double C_6(double r, double sig){return 1.0/(inv_Dt + sig/2.0)/r/delta_theta;};
 
+inline int idx_Er(int n, int i, int j, int k){ return n*(Nr*(Ntheta+1)*(Nphi+1)) + i*((Ntheta+1)*(Nphi+1)) + j*(Nphi+1) + k; }
+inline int idx_Eth(int n, int i, int j, int k ){ return n*((Nr+1)*Ntheta*(Nphi+1)) + i*(Ntheta*(Nphi+1)) + j*(Nphi+1) + k; }
+inline int idx_Ephi(int n, int i, int j, int k){ return n*((Nr+1)*(Ntheta+1)*Nphi) + i*((Ntheta+1)*Nphi) + j*Nphi + k; }
+
+inline int idx_Hr(int i, int j, int k){ return i*(Ntheta*Nphi) + j*Nphi + k; }
+inline int idx_Hth(int i, int j, int k){ return i*((Ntheta+1)*Nphi) + j*Nphi + k; }
+inline int idx_Hphi(int i, int j, int k){ return i*(Ntheta*(Nphi+1)) + j*(Nphi+1) + k; }
 
 #endif  // FDTD_H_ //

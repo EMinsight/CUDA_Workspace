@@ -24,7 +24,7 @@ void Ne_allocate( float *Nh, float *Re )
         ifs.getline(buf, bufsize);
     }
 
-    for( int i = 0; i <= ion_L; i++ ){
+    for( int i = 0; i < ion_L; i++ ){
         ifs >> height >> Nh[i];
         if(Nh[i] == -1) Nh[i] = 0.0;
         else Nh[i] = Nh[i]*1.0e6;

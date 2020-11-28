@@ -37,7 +37,7 @@ void ny_allocate( date date, geocoordinate lla, float *ny, float *Re ){
     Input.ap = 4.0;
     Input.ap_a = &Xp;
 
-    for(int i = 0; i < ion_L + 1; i++){
+    for(int i = 0; i < ion_L; i++){
 
         Input.alt = (int)altitude + i;
 

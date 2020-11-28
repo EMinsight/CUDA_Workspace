@@ -1,9 +1,9 @@
-OBJS = add_Jz.o main.o update_Ez.o update_Hx.o update_Hy.o
+OBJS = main.o update_Ez.o update_Hx.o udpate_Hy.o
 HEADERS = main.h
-OTPS = -std=c++1z -O3
+OPTS = -std=c++1z -O3
 
-main:	$(OBJS)
-	nvcc -o $@ $(OBJS)
+main: $(OBJS)
+	g++ -o $@ $(OBJS)
 
-%.o:	%.cu $(HEADERS) $(OPTS)
-	nvcc -c $< $(OPTS)
+%.o: %.cpp $(HEADERS) $(OPTS)
+	g++ -c $< $(OPTS)

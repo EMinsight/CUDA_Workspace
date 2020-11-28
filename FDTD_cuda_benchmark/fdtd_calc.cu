@@ -5,6 +5,7 @@
 #include <fstream>
 #include <string>
 #include <chrono>
+#include <stdio.h>
 
 #include "fdtd3d.h"
 
@@ -43,7 +44,8 @@ const float Azim = float( 61.0*M_PI/180.0 );
 void fdtd_calc(perturbation P_info, date ymd, geocoordinate lla_info, 
                             int Num_obs, geocoordinate* obs_p, float* Magnitude )
 {
-    int t_step = 1800;
+    int n{ 0.0 };
+    int time_step = 1800;
     float t;
     float J;
     int NEW;
@@ -58,21 +60,53 @@ void fdtd_calc(perturbation P_info, date ymd, geocoordinate lla_info,
     array_initialize( Htheta, Nr*(Ntheta + 1)*Nphi );
     array_initialize( Hphi, Nr*Ntheta*(Nphi + 1) )
 
-    float* Er, *Etheta, *Ephi;
+    /*float* Er, *Etheta, *Ephi;
     Er = new float[ 2*Nr*(Ntheta + 1)*(Nphi + 1)　];
     Etheta = new float[ 2*(Nr + 1)*Ntheta*(Nphi + 1) ];
     Ephi = new float[ 2*(Nr + 1)*(Ntheta + 1)*Nphi ];
     array_initialize( Er, 2*Nr*(Ntheta + 1)*(Nphi + 1) );
     array_initialize( Etheta, 2*(Nr + 1)*Ntheta*(Nphi + 1) );
-    array_initialize( Ephi, 2*(Nr + 1)*(Ntheta + 1)*Nphi );
+    array_initialize( Ephi, 2*(Nr + 1)*(Ntheta + 1)*Nphi );*/
+    
+    float *oldE_r, *oldE_theta, *oldE_phi;
+    oldE_r = new float[ Nr*(Ntheta + 1)*(Nphi + 1) ];
+    oldE_theta = new float[ (Nr + 1)*Ntheta*( Nphi + 1)];
+    oldE_phi = new float[ (Nr + 1)*(Ntheta + 1)*Nphi];
+    array_initialize( oldE_r, Nr*(Ntheta + 1)*(Nphi + 1) );
+    array_initialize( oldE_theta, (Nr + 1)*Ntheta*(Nphi + 1) );
+    array_initialize( oldE_phi, (Nr + 1)*(Ntheta + 1)*Nphi );
 
-    float* Dr, *Dtheta, *Dphi;
+    float *newE_r, *newE_theta, *newE_phi;
+    newE_r = new float( Nr*(Ntheta + 1)*(Nphi + 1) );
+    newE_theta = new float( (Nr + 1)*Ntheta*(Nphi + 1) );
+    newE_phi = new float( (Nr + 1)*(Ntheta + 1)*Nphi );
+    array_initialize( newE_r, Nr*(Ntheta + 1)*(Nphi + 1) );
+    array_initialize( newE_theta, (Nr + 1)*Ntheta*(Nphi + 1) );
+    array_initialize( newE_phi, (Nr + 1)*(Ntheta + 1)*Nphi );
+
+    /*float* Dr, *Dtheta, *Dphi;
     Dr = new float[ 2*Nr*(Ntheta + 1)*(Nphi + 1)　];
     Dtheta = new float[ 2*(Nr + 1)*Ntheta*(Nphi + 1) ];
     Dphi = new float[ 2*(Nr + 1)*(Ntheta + 1)*Nphi ];
     array_initialize( Dr, 2*Nr*(Ntheta + 1)*(Nphi + 1) );
     array_initialize( Dtheta, 2*(Nr + 1)*Ntheta*(Nphi + 1) );
-    array_initialize( Dphi, 2*(Nr + 1)*(Ntheta + 1)*Nphi );
+    array_initialize( Dphi, 2*(Nr + 1)*(Ntheta + 1)*Nphi );*/
+
+    float* oldD_r, *oldD_theta, *oldD_phi;
+    oldD_r = new float[ Nr*(Ntheta + 1)*(Nphi + 1) ];
+    oldD_theta = new oldD_theta[ (Nr + 1)*Ntheta*(Nphi + 1) ];
+    oldD_phi = new oldD_phi[ (Nr + 1)*(Ntheta + 1)*Nphi ];
+    array_initialize( oldD_r, Nr*( Ntheta + 1 )*( Nphi + 1 ) );
+    array_initialize( oldD_theta, ( Nr + 1 )*Ntheta*(Nphi + 1) );
+    array_initialize( oldD_phi, (Nr + 1)*(Ntheta + 1)*Nphi );
+
+    float *newD_r, *newD_theta, *newD_phi;
+    newD_r = new float[ Nr*(Ntheta + 1)*(Nphi + 1) ];
+    newD_theta = new float[ (Nr + 1)*Ntheta*(Nphi + 1) ];
+    newD_phi = new float[ (Nr + 1)*(Ntheta + 1)*Nphi ];
+    array_initial( newD_r, Nr*(Ntheta + 1)*(Nphi + 1) );
+    array_initial( newD_theta, (Nr + 1)*Ntheta*(Nphi + 1) );
+    array_initial( newD_phi, (Nr + 1)*(Ntheta + 1)*Nphi );
 
     float *Dr_theta1, *Dr_theta2, *Dr_phi;
     float *Dtheta_phi, *Dtheta_r;
@@ -104,17 +138,17 @@ void fdtd_calc(perturbation P_info, date ymd, geocoordinate lla_info,
     sigma_theta_h = new float[ Ntheta + 1 ];
     sigma_phi_h = new float[ Nphi + 1 ];
 
-    float *geo_B = new float[3];
-    float *sph_B = new float[3];
+    //float *geo_B = new float[3];
+    //float *sph_B = new float[3];
 
-    geo_mag( geo_B, sph_B );
+    //geo_mag( geo_B, sph_B );
 
     // Ne, nyu //
     float *Nh = new float[ion_L];
     //float *noise_Nh = new float[(ion_L + 1)*(Ntheta + 1)*(Nphi + 1)];
     float *noise_Nh = new float[ion_L*Ntheta*Nphi];
-    float *ny = new float[ion_L + 1];
-    float *Re = new float[ion_L + 1]; 
+    float *ny = new float[ion_L];
+    float *Re = new float[ion_L]; 
 
     Ne_allocate(Nh, Re);
     ny_allocate(ymd, lla_info, ny, Re);
@@ -138,5 +172,53 @@ void fdtd_calc(perturbation P_info, date ymd, geocoordinate lla_info,
 
     // fourie //
     std::complex <float>* E_famp = new std::complex <float> [Num_obs];
+
+    // memory allocate (device) //
+    float *Hr_d, *Htheta_d, *Hphi_d;
+    cudaMalloc( (void**)&Hr_d, sizeof(float)*(Nr + 1)*Ntheta*Nphi );
+    cudaMalloc( (void**)&Htheta_d, sizeof(float)*Nr*(Ntheta + 1)*Nphi );
+    cudaMalloc( (void**)&Hphi_d, sizeof(float)*Nr*Ntheta*(Nphi + 1) );
+
+    float *oldEr_d, *oldE_theta, *oldE_phi;
+
+
+    float *Er_d, *Etheta_d, *Ephi_d;
+    cudaMalloc( (void**)&Er_d, sizeof(float)*2*Nr*(Ntheta + 1)*(Nphi + 1) );
+    cudaMalloc( (void**)&Etheta_d, sizeof(float)*2*(Nr + 1)*Ntheta*(Nphi + 1) );
+    cudaMalloc( (void**)&Ephi_d, sizeof(float)*2*(Nr + 1)*(Ntheta + 1)*Nphi );
+
+    float *Dr_d, *Dtheta_d, Dphi_d;
+    cudaMalloc( (void**)&Dr_d, sizeof(float)*2*Nr*(Ntheta + 1)*(Nphi + 1) );
+    cudaMalloc( (void**)&Dtheta_d, sizeof(float)*2*(Nr + 1)*Ntheta*(Nphi + 1) );
+    cudaMalloc( (void**)&Dphi_d, sizeof(float)2*(Nr + 1)*(Ntheta + 1)*Nphi );
+
+    float *sigma_theta_d, *sigma_phi_d, *sigma_theta_h_d, *sigma_phi_h_d;
+    cudaMalloc( (void**)&sigma_theta_d, sizeof(float)*(Ntheta + 1) );
+    cudaMalloc( (void**)&sigma_phi_d, sizeof(float)*(Nphi + 1) );
+    cudaMalloc( (void**)&sigma_theta_h_d, sizeof(float)*(Ntheta + 1) );
+    cudaMalloc( (void**)&sigma_phi_h_d, sizeof(float)*(Nphi + 1) );
+
+    float *noise_Nh_d;
+    cudaMalloc( (void**)&noise_Nh, sizeof(float)*ion_L*Ntheta*Nphi );
+
+    float *Cmat_d, Fmat_d;
+    cudaMalloc( (void**)&Cmat_d, sizeof(float)*ion_L*Ntheta*Nphi*3*3 );
+    cudaMalloc( (void**)&Fmat_d, sizeof(float)*ion_L*Ntheta*Nphi*3*3 );
+
+    std::complex <float>* E_famp_d;
+    cudaMalloc( (void**)&E_famp_d, sizeof( std::complex<float> )*Num_obs );
+
+    dim3 Dg( 1024/256, 1024/256, 1 ), Db( 256, 256, 1 );    
+
+    for( n = 1; n < time_step; n++ ){
+        NEW = n%2;
+        OLD = (n + 1)%2;
+
+        t = (float(n) - 0.5)*Dt;
+
+
+
+
+    }
 
 }

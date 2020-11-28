@@ -1,9 +1,11 @@
 #define _USE_MATH_DEFINES
 #include <iostream>
 #include <cmath>
+#include <math.h>
 #include <fstream>
 #include <string>
 #include <stdio.h>
+#include <complex>
 #include <cuda.h>
 #include <cuda_runtime.h>
 
@@ -16,10 +18,18 @@ __global__ void update_Hy( int Nx, int Ny, float* Hy_d, float* Ez_d, float Coeff
 
 int main( void )
 {
+    std::fstream ofs_fourie;
+    ofs_fourie.open("result/magnitude.dat");
+
+    // imaginary unit //
+    //std::copmlex <float> zj = (0.0, 1.0);
+    float complex zj;
+
     /* Memory allocate (host) */
     float *Ez = new float[ ( Nx+1 )*( Ny+1 )];
     float *Hx = new float[ ( Nx+1 )*Ny ];
     float *Hy = new float[ Nx*( Ny+1 ) ];
+    std::complex <float> *E_famp = new std:complex <float> [ Nx+1 ];
 
     /* initialize */
     for( int i = 0; i < Nx+1; i++ ){
@@ -34,28 +44,32 @@ int main( void )
         for( int j = 0; j < Ny+1; j++ ) Hy[ idx_Hy(i, j) ] = 0.0;
     }
 
+    for( int i = 0; i < Nx+1; i++ ){
+        Ez_famp[i] = (0.0, 0.0);
+    }
+
     /* Memory allocate (device) */
-    float *Ez_d, *Hx_d, *Hy_d;
+    float *Ez_d, *Hx_d, *Hy_d, Ez_famp_d;
     cudaMalloc( (void**)&Ez_d, sizeof(float)*(Nx+1)*(Ny+1) );
     cudaMalloc( (void**)&Hx_d, sizeof(float)*(Nx+1)*Ny );
     cudaMalloc( (void**)&Hy_d, sizeof(float)*Nx*(Ny+1) );
+    cudaMalloc( (void**)&Ez_famp_d, sizeof( std::complex <float> )*(Nx+1) );
 
     /* Copy Host to Device */
     cudaMemcpy( Ez_d, Ez, sizeof(float)*(Nx+1)*(Ny+1),  cudaMemcpyHostToDevice );
     cudaMemcpy( Hx_d, Hx, sizeof(float)*(Nx+1)*Ny,  cudaMemcpyHostToDevice );
     cudaMemcpy( Hy_d, Hy, sizeof(float)*Nx*(Ny+1),  cudaMemcpyHostToDevice );
+    cudaMemcpy( Ez_famp_d, Ez_famp, sizeof( std::complex <float> )*(Nx+1),    cudaMemcpyHostToDevice );
 
     dim3 Dg(10,10,1), Db(10,10,1);
 
     int NT{ int(Tmax/Dt) };
 
-    /*std::cout << i_s << " " << j_s << " " << Dt << " " << sig << " " << EPS0 << "\n";
-
-    std::exit(0);*/
-
     for( int n = 0; n < NT; n++ ){
         
         float t { float(((float)n-0.5)*Dt) };
+
+        fourie <<<Dg, Db>>> ( Nx, Ny, zj, omega, t, Ez_d, Ez_famp_d );
 
         add_Jz <<<Dg, Db>>> ( i_s, j_s, Ez_d, t ,Dt, t0, sig, EPS0 );
         update_Ez <<<Dg, Db>>> ( Nx, Ny, Ez_d, Hx_d, Hy_d, CEz1, CEz2 );
@@ -82,6 +96,12 @@ int main( void )
         
         cudaDeviceSynchronize();
 
+    }
+    
+    cudaMemcpy( Ez_famp, Ez_famp_d, sizeof( std::complex<float> )*(Nx + 1), cudaDeviceToHost );
+    
+    for( int i = 0; i < Nx + 1; i++ ){
+        ofs_fourie << i << " " << 20.0*std::log10( std::abs(E_famp[i]/E_famp[Nx/2] ) )
     }
 
     std::cout << Ez[idx_Ez(i_s,  j_s)] << std::endl;

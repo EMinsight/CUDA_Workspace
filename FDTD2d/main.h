@@ -1,37 +1,27 @@
 #define _USE_MATH_DEFINES
-#include <cuda.h>
 #include <cmath>
-#include <stdio.h>
 
-const float C0 { 3.0e8 };
-const float MU0 { 4.0e-7 * M_PI };
-const float EPS0 { 1.0/MU0/C0/C0 };
+const double C0 { 3.0e8 };
+const double MU0 { 4.0e-7 * M_PI };
+const double EPS0 { 1.0/MU0/C0/C0 };
 
 const int Nx { 100 };
 const int Ny { 100 };
 const int i_s { Nx/2 };
 const int j_s { Ny/2 };
 
-const float Dx { 1.0e3 };
-const float Dy { 1.0e3 };
-const float Tmax { 0.5e-3 };
-const float Dt { float( 0.999/C0/std::sqrt( 1.0/Dx/Dx + 1.0/Dy/Dy )) };
-const float sig { float(10*Dt) };
-const float t0 { float(5*sig) };
+const double Dx { 1.0e3 };
+const double Dy { 1.0e3 };
+const double Tmax {  0.5e-3 };
+const double Dt { 0.999/C0/std::sqrt( 1.0/Dx/Dx + 1.0/Dy/Dy ) };
+const double sig { 10.0*Dt };
+const double t0 { 5.0*sig };
 
-const float CEz1 { float(Dt/EPS0/Dx) };
-const float CEz2 { float(Dt/EPS0/Dy) };
-const float CHx { float(Dt/MU0/Dy) };
-const float CHy { float(Dt/MU0/Dx) };
+const double CEz1 { Dt/EPS0/Dx };
+const double CEz2 { Dt/EPS0/Dy };
+const double CHx { Dt/MU0/Dy };
+const double CHy { Dt/MU0/Dx };
 
-__global__ void add_Jz( int i_s, int j_s, float* Ez_d, float t, float Dt, float t0, float sigma, float EPS0 );
-__global__ void update_Ez( int Nx, int Ny, float* Ez_d, float* Hx_d, float* Hy_d, float Coeff_Ez1, float Coeff_Ez2 );
-__global__ void update_Hx( int Nx, int Ny, float* Hx_d, float* Ez_d, float Coeff_Hx );
-__global__ void update_Hy( int Nx, int Ny, float* Hy_d, float* Ez_d, float Coeff_Hy );
-
-//__global__ void add( float* a, float* b, float* c );
-
-//inline int idx_Ez( int i, int j ){ return i + j*( Nx + 1 ); }
-inline int idx_Ez( int i, int j ){ return i + j*( Nx + 1); }
-inline int idx_Hx( int i, int j ){ return i + j*( Nx + 1); }
-inline int idx_Hy( int i, int j ){ return i + j*Nx; }
+void update_Ez( double **Ez, double **Hx, double **Hy );
+void update_Hx( double **Hx, double **Ez );
+void update_Hy( double **Hy, double **Ez );

@@ -39,3 +39,4 @@ __global__ void fourie( int Nx, int Ny, std::complex <float> zj, float omega,
 inline int idx_Ez( int i, int j ){ return i + j*( Nx + 1); }
 inline int idx_Hx( int i, int j ){ return i + j*( Nx + 1); }
 inline int idx_Hy( int i, int j ){ return i + j*Nx; }
+

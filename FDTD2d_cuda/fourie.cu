@@ -4,7 +4,7 @@
 #include "main.h"
 
 __global__ void fourie( int Nx, int Ny, std::complex <float> zj, float omega,
-                        float time, float *Ez_d, std::complex <float>* Ez_famp_d )
+                        float t, float *Ez_d, std::complex <float>* Ez_famp_d )
 {
     int i = blockDim.x * blockIdx.x + threadIdx.x;
     int j = blockDim.y * blockIdx.y + threadIdx.y;
